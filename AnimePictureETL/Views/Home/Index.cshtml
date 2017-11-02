@@ -1,0 +1,335 @@
+﻿@section scripts {
+    <script src="~/Scripts/bootstrap-select.min.js"></script>
+    <script>
+
+        String.prototype.capitalize = function () {
+            return this.charAt(0).toUpperCase() + this.slice(1);
+        }
+
+        $(function () {
+
+            var submittedPostData = { width: 0, height: 0, source: '', filename: '', size: 0, checksum: '' };
+
+            $('#danbooru-input-tag').submit(function (event) {
+                var tag = $('#tag-extract').val();
+                var data = { tag: tag };
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/DanbooruExtractTag",
+                    data: data
+                }).done(function () {
+
+                });
+            });
+
+            $('#danbooru-input-id').submit(function (event) {
+                var id = $('#danbooru-id-extract').val();
+                var data = { id: id };
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/DanbooruExtract",
+                    data: data
+                }).done(function (data) {
+                    $("#image-preview").attr('src', data.FileName);
+                    var widthFactor = data.Width / 400.0;
+                    $("#image-preview").attr('style', 'width: 400px; height: ' + Math.round(data.Height / widthFactor) + 'px;');
+                    for (var i = 0; i < data.Characters.length; i++) {
+                        var tag = data.Characters[i].Tag;
+                        var name = data.Characters[i].SuggestedName;
+                        var familyName = data.Characters[i].SuggestedFamilyName;
+                        familyName = familyName != null ? familyName : '';
+                        var exists = data.Characters[i].Exists;
+                        $('#characters-table tbody ').append(
+                            '<tr>' +
+                            '<td class="col-md-2"><input type="text" name="Tag" value="' + tag + '" hidden><input type="text" name="Exists" value="' + exists + '" hidden>' + tag + '</td>' +
+                            '<td class="col-md-2"><input type="text" name="SuggestedName" value="' + name + '"' + (exists ? 'readonly' : '') + '></td>' +
+                            '<td class="col-md-2"><input type="text" name="SuggestedFamilyName" value="' + familyName + '"' + (exists ? 'readonly' : '') + '></td>' +
+                            '</tr>');
+                    }
+                    for (var i = 0; i < data.Artists.length; i++) {
+                        var tag = data.Artists[i].Tag;
+                        var name = data.Artists[i].SuggestedName;
+                        var nickname = data.Artists[i].SuggestedNickname;
+                        $('#artists-table tbody ').append(
+                            '<tr>' +
+                            '<td class="col-md-2"><input type="text" name="Tag" value="' + tag + '" hidden>' + tag + '</td>' +
+                            '<td class="col-md-2"><input type="text" name="SuggestedName" value="' + name + '"></td>' +
+                            '<td class="col-md-2"><input type="text" name="SuggestedNickname" value="' + nickname + '"></td>' +
+                            '</tr>');
+                    }
+                    for (var i = 0; i < data.Series.length; i++) {
+                        var tag = data.Series[i].Tag;
+                        var name = data.Series[i].SuggestedName;
+                        $('#series-table tbody ').append(
+                            '<tr>' +
+                            '<td class="col-md-2"><input type="text" name="Tag" value="' + tag + '" hidden>' + tag + '</td>' +
+                            '<td class="col-md-4"><input type="text" name="SuggestedName" value="' + name + '"></td>' +
+                            '</tr>');
+                    }
+                    for (var i = 0; i < data.Tags.length; i++) {
+                        var tag = data.Tags[i].Tag;
+                        var name = data.Tags[i].SuggestedTag;
+                        var row = '<tr>' +
+                            '<td class="col-md-2"><input type="text" name="Tag" value="' + tag + '" hidden>' + tag + '</td>' +
+                            '<td class="col-md-2"><input type="text" name="SuggestedTag" value="' + name + '"></td>' +
+                            '<td class="col-md-2"><select name="character-picker" class="selectpicker" multiple>';
+                        for (var j = 0; j < data.Characters.length; j++) {
+                            row += '<option value="' + data.Characters[j].Tag + '">' + data.Characters[j].Tag + '</option>';
+                        }
+                        row += '</select></td>';
+                        row += '<td class="col-md-1"><button class="btn btn-default"><i class="glyphicon glyphicon-remove"></i></button></td></tr>';
+                        $('#tags-table tbody ').append(row);
+
+                        $('#tags-table tbody tr td').children('select').each(function () {
+                            $(this).selectpicker('refresh');
+                        });
+                    }
+                    submittedPostData['width'] = data.Width;
+                    submittedPostData['height'] = data.Height;
+                    submittedPostData['source'] = data.Source;
+                    submittedPostData['filename'] = data.FileName;
+                    submittedPostData['size'] = data.Size;
+                    submittedPostData['checksum'] = data.Checksum;
+
+                    $("#danbooruExtractModal").modal("show");
+                    return false;
+                });
+                return false;
+            });
+
+            $('#discard-changes-danbooru').click(function (event) {
+                $('#characters-table').find("tr:gt(0)").remove();
+                $('#artists-table').find("tr:gt(0)").remove();
+                $('#series-table').find("tr:gt(0)").remove();
+                $('#tags-table').find("tr:gt(0)").remove();
+            });
+
+            $('#submit-changes-danbooru').click(function (event) {
+                var characters = $('#characters-table tbody tr').map(function () {
+                    var values = {};
+                    $('input', $(this)).each(function () {
+                        values[this.name] = this.value;
+                    });
+                    return values;
+                }).get();
+                var artists = $('#artists-table tbody tr').map(function () {
+                    var values = {};
+                    $('input', $(this)).each(function () {
+                        values[this.name] = this.value;
+                    });
+                    return values;
+                }).get();
+                var series = $('#series-table tbody tr').map(function () {
+                    var values = {};
+                    $('input', $(this)).each(function () {
+                        values[this.name] = this.value;
+                    });
+                    return values;
+                }).get();
+                var tags = $('#tags-table tbody tr').map(function () {
+                    var values = {};
+                    $('input', $(this)).each(function () {
+                        values[this.name] = this.value;
+                    });
+                    arr = [];
+                    $('option', $(this)).each(function () {
+                        if (this.selected) {
+                            arr.push(this.value);
+                        }
+                    });
+                    values['CharacterTag'] = arr;
+                    return values;
+                }).get();
+                var width = submittedPostData['width'];
+                var height = submittedPostData['height'];
+                var source = submittedPostData['source'];
+                var filename = submittedPostData['filename'];
+                var size = submittedPostData['size'];
+                var checksum = submittedPostData['checksum'];
+                var data = {
+                    'data': {
+                        'characters': characters, 'artists': artists, 'series': series, 'tags': tags,
+                        'width': width, 'height': height, 'source': source, 'fileName': filename, 'size': size, 'checksum': checksum
+                    }
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/SavePostWithChanges",
+                    data: data
+                });
+                $("#danbooruExtractModal").modal("hide");
+                $('#characters-table').find("tr:gt(0)").remove();
+                $('#artists-table').find("tr:gt(0)").remove();
+                $('#series-table').find("tr:gt(0)").remove();
+                $('#tags-table').find("tr:gt(0)").remove();
+            });
+
+            $('#search-form-submit').click(function (e) {
+                e.preventDefault();
+                var name = $('#name').val();
+                var familyName = $('#family-name').val();
+                var series = $('#series').val();
+                var artist = $('#artist').val();
+                var data = { name: name, familyName: familyName, series: series, artist: artist };
+                // '?name=' + name + '&familyName=' + familyName + '&series=' + series + '&artist=' + artist
+                window.location = '@Url.Action("Search", "Browse")' + '?name=' + name + '&familyName=' + familyName + '&series=' + series + '&artist=' + artist;
+            });
+        });
+
+    </script>
+}
+@section styles{
+<link href="~/Content/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <style>
+        #danbooruExtractModal .modal-dialog
+        {
+            width: 60%;
+        }
+        #danbooruExtractModal .modal-content
+        {
+            height: 80%;
+        }
+        .modal-dialog {
+            overflow-y: initial;
+        }
+
+        .modal .modal-body {
+            max-height: 900px;
+            overflow-y: auto;
+        }
+
+        .my-image {
+            position: fixed;
+        }
+    </style>
+}
+@{
+    ViewBag.Title = "Index";
+}
+
+<div class="modal fade modal-lg" id="danbooruExtractModal" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Confirm changes</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-5 col-xs-5">
+                        <img class="my-image" src="" id="image-preview" style="">
+                    </div>
+                    <div class="col-md-7 col-xs-7">
+                        <table id="characters-table" class="table table-striped table-bordered ">
+                            <caption><h4>Characters</h4></caption>
+                            <thead>
+                                <tr>
+                                    <th>Danbooru tag</th>
+                                    <th>Name</th>
+                                    <th>Family name</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <table id="artists-table" class="table table-striped table-bordered">
+                            <caption><h4>Artists</h4></caption>
+                            <thead>
+                                <tr>
+                                    <th>Danbooru tag</th>
+                                    <th>Name</th>
+                                    <th>Nickname</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <table id="series-table" class="table table-striped table-bordered">
+                            <caption><h4>Series</h4></caption>
+                            <thead>
+                                <tr>
+                                    <th>Danbooru tag</th>
+                                    <th>Name</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <div class="table-responsive">
+                            <table id="tags-table" class="table">
+                                <caption><h4>Tags</h4></caption>
+                                <thead>
+                                    <tr>
+                                        <th>Danbooru tag</th>
+                                        <th>Name</th>
+                                        <th>Character</th>
+                                        <th>Remove</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="discard-changes-danbooru">Close</button>
+                <button type="submit" class="btn btn-default" id="submit-changes-danbooru">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-3 col-left">
+        <h4 class="display-4">Extract from danbooru</h4>
+        <form class="form" role="search" id="danbooru-input-tag">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search" name="srch-term" id="tag-extract">
+                <div class="input-group-btn">
+                    <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
+                </div>
+            </div>
+        </form>
+        <h4 class="display-4">Extract picture through its ID</h4>
+        <form class="form" role="search" id="danbooru-input-id">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Id" name="danbooru-id-extract" id="danbooru-id-extract">
+                <div class="input-group-btn">
+                    <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-ok-circle"></i></button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-9">
+        <h3 class="display-4">Search</h3>
+        <form class="form-horizontal">
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="name">Name:</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="name" placeholder="">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="family-name">Family name:</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="family-name" placeholder="">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="series">Series:</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="series" placeholder="">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="artist">Artist:</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="artist" placeholder="">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button type="submit" class="btn btn-default" id="search-form-submit">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+

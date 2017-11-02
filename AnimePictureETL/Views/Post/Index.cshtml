@@ -1,0 +1,56 @@
+﻿@{
+    ViewBag.Title = "Index";
+    var picture = (AnimePictureETL.Models.Picture)Session["Picture"];
+}
+
+<h2>Post @picture.PictureId</h2>
+
+<div class="container">
+    <div class="row">
+        <div class="col-xs-2" id="tag-panel">
+            <h4>Characters</h4>
+            @foreach (var character in picture.Characters)
+            {
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="character-box-@character.CharacterId">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapse-@character.CharacterId" aria-expanded="true" aria-controls="collapse-@character.CharacterId">
+                                @character.Name @character.FamilyName
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapse-@character.CharacterId" class="panel-collapse collapse" role="tabpanel" aria-labelledby="character-box-@character.CharacterId">
+                        <div class="panel-body">
+                            @foreach(var tag in picture.CharacterTags)
+                            {
+                                if (tag.Character.DanbooruName == character.DanbooruName)
+                                {
+                                    <p>@tag.Tag.Name</p>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            <h4>Series</h4>
+            <ul class="list-group">
+                @foreach (var series in picture.Series)
+                {
+                    <li class="list-group-item">@series.Name</li>
+                }
+            </ul>
+            <h4>Artists</h4>
+            <ul class="list-group">
+                @foreach (var artist in picture.Artists)
+                {
+                    <li class="list-group-item">@artist.Name</li>
+                }
+            </ul>
+        </div>
+        <div class="col-xs-10">
+            <div class="row">
+                <img src="@picture.FileName"  class="img-responsive">
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="AnimePictureETL"
+                   auto-import="true"
+                   namespace="AnimePictureETL.Models">
+
+  <class name="Character" table="characters" batch-size="25">
+
+    <id name="CharacterId" column="character_id" type="int">
+      <generator class="sequence">
+        <param name="sequence">characters_character_id_seq</param>
+      </generator>
+    </id>
+
+    <property name="Name" column="name" type="string" length="25"/>
+    <property name="FamilyName" column="family_name" type="string" length="40"/>
+
+    <set name="Pictures" table="pictures_characters" inverse="true" lazy="true">
+      <key column="character_id"/>
+      <many-to-many class="Picture" column="picture_id"/>
+    </set>
+
+    <set name="CharacterTags" lazy="false" inverse="true" batch-size="25" >
+      <key column="character_id" />
+      <one-to-many class="CharacterTag" />
+    </set>
+
+    <property name="DanbooruName" column="danbooru_name" type="string" length="100"/>
+
+  </class>
+</hibernate-mapping>

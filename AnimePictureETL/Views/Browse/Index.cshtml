@@ -1,0 +1,17 @@
+﻿@model  IList<AnimePictureETL.Models.Picture>
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Browse</h2>
+
+<div class="container">
+    <div class="row" id="gallery">
+        @foreach (var picture in Model)
+        {
+            <div class="col-md-4 col-sm-6 col-xs-12">
+                <a href="/Post/Index?id=@picture.PictureId"><img src="@picture.FileName" class="img-responsive img-rounded"></a>
+            </div>
+        }
+    </div>
+</div>

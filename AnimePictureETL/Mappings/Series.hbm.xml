@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="AnimePictureETL"
+                   auto-import="true"
+                   namespace="AnimePictureETL.Models">
+
+  <class name="Series" table="series" batch-size="25">
+
+    <id name="SeriesId" column="series_id" type="int">
+      <generator class="sequence">
+        <param name="sequence">series_series_id_seq</param>
+      </generator>
+    </id>
+
+    <property name="Name" column="name" type="string"/>
+
+    <set name="Pictures" table="pictures_series" inverse="true" lazy="true">
+      <key column="series_id"/>
+      <many-to-many class="Picture" column="picture_id"/>
+    </set>
+
+  </class>
+</hibernate-mapping>

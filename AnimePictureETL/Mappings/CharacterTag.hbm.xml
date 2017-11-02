@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="AnimePictureETL"
+                   auto-import="true"
+                   namespace="AnimePictureETL.Models">
+
+  <class name="CharacterTag" table="character_tags" batch-size="25">
+
+    <id name="CharacterTagId" column="character_tag_id" type="long">
+      <generator class="sequence">
+        <param name="sequence">character_tags_character_tag_id_seq</param>
+      </generator>
+    </id>
+
+    <many-to-one not-null="true" class="Picture" name="Picture" column="picture_id" />
+
+    <many-to-one not-null="true" class="Tag" name="Tag" column="tags_id" cascade="save-update" />
+
+    <many-to-one name="Character" class="Character" column="character_id" />
+
+  </class>
+</hibernate-mapping>
